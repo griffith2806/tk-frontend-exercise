@@ -17,16 +17,30 @@ import {
   StyledHeader,
 } from "../components/home/homeStyles";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import CreateRecipeDrawer from "../components/recipe/RecipeDrawer";
+import CreateRecipeForm from "../components/recipe/CreateRecipeForm";
 import { useState } from "react";
+import { ViewEditRecipeForm } from "../components/recipe/ViewEditRecipeForm";
+import { Recipe } from "../models/recipe";
 
 export function Home() {
   const [isCreate, setIsCreate] = useState(false);
+  const [isViewEdit, setIsViewEdit] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe>()
 
   const { data } = useQuery({
     queryKey: ["recipes"],
     queryFn: getRecipes,
   });
+
+  const handleRecipeSelected = (recipe: Recipe) =>{
+    setSelectedRecipe(recipe);
+    setIsViewEdit(true);
+  }
+
+  const handleEditClosed = () => {
+    setIsViewEdit(false);
+    setSelectedRecipe(undefined);
+  }
 
   return (
     <>
@@ -53,7 +67,7 @@ export function Home() {
                         <Typography variant="h5">{recipe.name}</Typography>
                         <RestaurantIcon />
                       </RecipeHeader>
-                      <IconButton aria-label="edit recipe" size="small">
+                      <IconButton aria-label="edit recipe" size="small" onClick={() => handleRecipeSelected(recipe)}>
                         <EditIcon />
                       </IconButton>
                     </RecipeHeaderBox>
@@ -64,10 +78,13 @@ export function Home() {
           ))}
         </Grid>
       </Container>
-      <CreateRecipeDrawer
+      <CreateRecipeForm
         open={isCreate}
         handleClose={() => setIsCreate(false)}
       />
+      {selectedRecipe && (
+        <ViewEditRecipeForm open={isViewEdit} recipe={selectedRecipe} handleClose={handleEditClosed} />
+      )}
     </>
   );
 }

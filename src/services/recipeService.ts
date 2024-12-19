@@ -12,7 +12,7 @@ export async function getRecipes(): Promise<Recipes> {
   return response.json();
 }
 
-export async function getRecipe(id: string) {
+export async function getRecipe(id: string): Promise<Recipe> {
   const response = await fetch(
     `${process.env.REACT_APP_API_URL}/${resource}/${id}`
   );
@@ -24,7 +24,7 @@ export async function getRecipe(id: string) {
   return response.json();
 }
 
-export async function createRecipe(newRecipe: Recipe) {
+export async function createRecipe(newRecipe: Recipe): Promise<Recipe> {
   const response = await fetch(
     `${process.env.REACT_APP_API_URL}/${resource}/create`,
     {
@@ -41,4 +41,23 @@ export async function createRecipe(newRecipe: Recipe) {
   }
 
   return response.json();
+}
+
+export async function updateRecipe(recipe: Recipe):Promise<Recipe>{
+    const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/${resource}/update/${recipe.id}`,
+        {
+            method: 'PUT',
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(recipe)
+        }
+      );
+    
+      if (!response.ok) {
+        throw new Error("Failed to update recipe");
+      }
+    
+      return response.json();
 }

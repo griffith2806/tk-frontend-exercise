@@ -13,14 +13,12 @@ interface IRecipeDrawer {
   handleClose: () => void;
 }
 
-export default function CreateRecipeForm({
-  open,
-  handleClose,
-}: IRecipeDrawer) {
+export default function CreateRecipeForm({ open, handleClose }: IRecipeDrawer) {
   const { mutate, isPending } = useMutation({
     mutationFn: createRecipe,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      form.resetForm();
       handleClose();
     },
     onError: (error) => {
@@ -49,6 +47,7 @@ export default function CreateRecipeForm({
         <Stack>
           <TextField
             name="name"
+            value={form.values.name}
             onChange={form.handleChange}
             variant="outlined"
             fullWidth

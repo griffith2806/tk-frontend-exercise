@@ -44,6 +44,10 @@ export async function createRecipe(newRecipe: Recipe): Promise<Recipe> {
 }
 
 export async function updateRecipe(recipe: Recipe):Promise<Recipe>{
+    const body = {
+      ...recipe,
+      ingredients: recipe.ingredients?.map(x => x.name)
+    }
     const response = await fetch(
         `${process.env.REACT_APP_API_URL}/${resource}/update/${recipe.id}`,
         {
@@ -51,7 +55,7 @@ export async function updateRecipe(recipe: Recipe):Promise<Recipe>{
             'headers': {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(recipe)
+            body: JSON.stringify(body)
         }
       );
     
@@ -60,4 +64,17 @@ export async function updateRecipe(recipe: Recipe):Promise<Recipe>{
       }
     
       return response.json();
+}
+
+export async function  deleteRecipe(id:string): Promise<void> {
+  const response = await fetch(
+    `${process.env.REACT_APP_API_URL}/${resource}/delete/${id}`,
+    {
+        method: 'DELETE',
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to create recipe");
+  }
 }

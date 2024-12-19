@@ -1,7 +1,7 @@
 export interface Recipe {
   id?: string;
   name: string;
-  ingredients?: Recipe[];
+  ingredients?: Ingredient[];
   author_id: string;
   author_name?: string;
 }

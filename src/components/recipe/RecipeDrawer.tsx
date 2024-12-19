@@ -1,12 +1,24 @@
-import { Container, SwipeableDrawer } from "@mui/material";
+import { Container, styled, SwipeableDrawer } from "@mui/material";
 
-interface IRecipeDrawerProps{
-    open: boolean;
-    handleClose: () => void;
-    children: React.ReactNode;
+interface IRecipeDrawerProps {
+  open: boolean;
+  handleClose: () => void;
+  children: React.ReactNode;
 }
 
-export function RecipeDrawer({ open, handleClose, children }: IRecipeDrawerProps) {
+export const StyledContainer = styled(Container)(({ theme }) => ({
+    width: '500px',
+
+    [theme.breakpoints.down("sm")]:{
+        width: '350px'    
+    }
+}))
+
+export function RecipeDrawer({
+  open,
+  handleClose,
+  children,
+}: IRecipeDrawerProps) {
   return (
     <SwipeableDrawer
       open={open}
@@ -14,9 +26,9 @@ export function RecipeDrawer({ open, handleClose, children }: IRecipeDrawerProps
       onClose={handleClose}
       onOpen={() => {}}
     >
-      <Container sx={{ minWidth: "500px" }}>
+      <StyledContainer>
         {children}
-      </Container>
+      </StyledContainer>
     </SwipeableDrawer>
   );
 }

@@ -4,6 +4,7 @@ import {
   Container,
   Grid2 as Grid,
   IconButton,
+  Stack,
   Typography,
 } from "@mui/material";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
@@ -21,26 +22,34 @@ import CreateRecipeForm from "../components/recipe/CreateRecipeForm";
 import { useState } from "react";
 import { ViewEditRecipeForm } from "../components/recipe/ViewEditRecipeForm";
 import { Recipe } from "../models/recipe";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { DeleteRecipeDialog } from "../components/recipe/DeleteRecipeDialog";
 
 export function Home() {
   const [isCreate, setIsCreate] = useState(false);
   const [isViewEdit, setIsViewEdit] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe>()
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe>();
+  const [isDelete, setIsDelete] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["recipes"],
     queryFn: getRecipes,
   });
 
-  const handleRecipeSelected = (recipe: Recipe) =>{
+  const handleRecipeSelected = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
     setIsViewEdit(true);
-  }
+  };
 
   const handleEditClosed = () => {
     setIsViewEdit(false);
     setSelectedRecipe(undefined);
-  }
+  };
+
+  const handleDeleteSelected = (recipe: Recipe) => {
+    setSelectedRecipe(recipe);
+    setIsDelete(true);
+  };
 
   return (
     <>
@@ -67,9 +76,22 @@ export function Home() {
                         <Typography variant="h5">{recipe.name}</Typography>
                         <RestaurantIcon />
                       </RecipeHeader>
-                      <IconButton aria-label="edit recipe" size="small" onClick={() => handleRecipeSelected(recipe)}>
-                        <EditIcon />
-                      </IconButton>
+                      <Stack direction="row">
+                        <IconButton
+                          aria-label="edit recipe"
+                          size="small"
+                          onClick={() => handleRecipeSelected(recipe)}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          aria-label="edit recipe"
+                          size="small"
+                          onClick={() => handleDeleteSelected(recipe)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Stack>
                     </RecipeHeaderBox>
                   }
                 />
@@ -82,8 +104,23 @@ export function Home() {
         open={isCreate}
         handleClose={() => setIsCreate(false)}
       />
+      {selectedRecipe && isViewEdit && (
+        <ViewEditRecipeForm
+          open={isViewEdit}
+          recipe={selectedRecipe}
+          handleClose={handleEditClosed}
+        />
+      )}
+
       {selectedRecipe && (
-        <ViewEditRecipeForm open={isViewEdit} recipe={selectedRecipe} handleClose={handleEditClosed} />
+        <DeleteRecipeDialog
+          open={isDelete}
+          recipe={selectedRecipe}
+          handleClose={() => {
+            setIsDelete(false);
+            setSelectedRecipe(undefined);
+          }}
+        />
       )}
     </>
   );

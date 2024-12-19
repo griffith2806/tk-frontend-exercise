@@ -1,12 +1,19 @@
-import { useMutation } from "@tanstack/react-query";
-import { Recipe } from "../../models/recipe";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Ingredient, Recipe } from "../../models/recipe";
 import { RecipeDrawer } from "./RecipeDrawer";
 import { queryClient } from "../../configurations/queryClient";
 import { useFormik } from "formik";
 import { CreateUpdateRecipeValidationSchema } from "../../validation/recipeValidation";
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import {
+  Autocomplete,
+  Button,
+  Chip,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { LoadingButton } from "@mui/lab";
-import { updateRecipe } from "../../services/recipeService";
+import { getRecipe, updateRecipe } from "../../services/recipeService";
 
 interface IViewEditProps {
   recipe: Recipe;
@@ -19,10 +26,10 @@ export function ViewEditRecipeForm({
   handleClose,
   open,
 }: IViewEditProps) {
-  const { mutate, isPending } = useMutation({
+  const mutationResult = useMutation({
     mutationFn: updateRecipe,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["recipes", "view-recipe"] });
       handleClose();
     },
     onError: (error) => {
@@ -33,16 +40,40 @@ export function ViewEditRecipeForm({
     },
   });
 
+  const queryResult = useQuery({
+    queryKey: ["view-recipe", recipe.id],
+    queryFn: () => getRecipe(recipe.id!),
+  });
+
   const form = useFormik<Recipe>({
     initialValues: {
       id: recipe.id,
       name: recipe.name,
       author_id: recipe.author_id,
-      ingredients: recipe.ingredients ?? [],
+      ingredients: queryResult.data?.ingredients ?? [],
     },
-    onSubmit: (values) => mutate(values),
+    onSubmit: (values) => mutationResult.mutate(values),
     validationSchema: CreateUpdateRecipeValidationSchema,
+    enableReinitialize: true,
   });
+
+  const loading = mutationResult.isPending || queryResult.isLoading;
+
+  const handleIngredientsChanged = (
+    _: React.SyntheticEvent,
+    values: Ingredient[]
+  ) => {
+    const processedValues = values.map((value) => {
+      if (typeof value === 'string') {
+        return {
+          id: Date.now().toString(),
+          name: value,
+        } as Ingredient;
+      }
+      return value;
+    });
+    form.setFieldValue("ingredients", processedValues);
+  };
 
   return (
     <RecipeDrawer open={open} handleClose={handleClose}>
@@ -50,15 +81,53 @@ export function ViewEditRecipeForm({
         Update a Recipe
       </Typography>
       <form onSubmit={form.handleSubmit}>
-        <Stack>
+        <Stack gap={2} mt={1}>
           <TextField
             name="name"
             onChange={form.handleChange}
             value={form.values.name}
             variant="outlined"
+            label="Name"
             fullWidth
             helperText={form.errors.name}
             error={form.errors.name !== undefined}
+          />
+          <Autocomplete
+            multiple
+            id="ingrediednts-autocomplete"
+            options={[]}
+            value={form.values.ingredients ?? []}
+            onChange={(e, vals) => handleIngredientsChanged(e, vals as unknown as Ingredient[])}
+            freeSolo
+            isOptionEqualToValue={(option, value) => {
+              if (typeof value === 'string') {
+                return option.name === value;
+              }
+              return option.id === value.id;
+            }}
+            getOptionLabel={(option) => {
+              if (typeof option === 'string') {
+                return option;
+              }
+              return option.name;
+            }}
+            renderInput={(params) => (
+              <TextField {...params} variant="outlined" label="Ingredients" />
+            )}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => {
+                const { key, ...tagProps } = getTagProps({ index });
+                const label = typeof option === 'string' ? option : option.name;
+                return (
+                  <Chip
+                    variant="outlined"
+                    label={label}
+                    key={key}
+                    {...tagProps}
+                  />
+                );
+              })
+            }
           />
         </Stack>
         <Stack mt={2} direction="row" spacing={2}>
@@ -66,7 +135,7 @@ export function ViewEditRecipeForm({
             Close
           </Button>
           <LoadingButton
-            loading={isPending}
+            loading={loading}
             variant="contained"
             type="submit"
             color="primary"

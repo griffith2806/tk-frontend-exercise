@@ -2,7 +2,7 @@ import { array, object, string } from "yup";
 
 const IngredientValidationSchema = object().shape({
     id: string(),
-    name: string()
+    name: string().max(255, "Name must not exceed 255 characters")
 })
 
 export const CreateUpdateRecipeValidationSchema = object().shape({
